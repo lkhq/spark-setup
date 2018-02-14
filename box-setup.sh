@@ -1,6 +1,5 @@
 #!/bin/bash
-
-set -x # Verbose
+set -x
 
 # restrict ssh login
 cat << EOF >> /etc/ssh/sshd_config
@@ -10,7 +9,7 @@ PasswordAuthentication no
 AllowUsers vagrant@10.0.2.2 yofel ximion
 EOF
 
-service ssh restart
+systemctl restart ssh
 
 # Add more swap
 fallocate -l 8G /srv/swap

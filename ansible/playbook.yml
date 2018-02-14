@@ -1,5 +1,5 @@
 ---
-- name: playbook for system setup
+- name: Playbook for Laniakea Spark worker setup
   hosts: all
   sudo: yes
   tasks:
@@ -10,7 +10,6 @@
 
     - apt: name=vim
 
-- include: sbuild_playbook.yml
-- include: debile_playbook.yml
-- include: supervisor_playbook.yml
-- include: user_playbook.yml
+- import_playbook: sbuild_playbook.yml
+- import_playbook: spark_playbook.yml
+- import_playbook: user_playbook.yml

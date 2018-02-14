@@ -1,16 +1,14 @@
 ---
 - hosts: all
   vars:
-    devel: dasyatis
-    releases:
-        - bartholomea
-        - chromodoris
-        - "{{ devel }}"
-        - staging
-    mirror: "http://archive.tanglu.org/tanglu"
+    debootstrap_pkg_url: "http://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.93pureos1_all.deb"
+    incoming: landing
+    suites:
+        - green
+        - "{{ incoming }}"
+    mirror: "http://repo.pureos.net/pureos/"
     architectures:
         - amd64
-        - i386
     btrfs: False # experimental
   sudo: yes
   tasks:
@@ -20,13 +18,21 @@
     - apt: name=debootstrap
     - apt: name=schroot
     - apt: name=sbuild
-    - apt: name=aptitude
     - apt: name=lintian
     - apt: name=haveged
     - apt: name=coreutils
 
     - apt: name=btrfs-tools
       when: btrfs
+
+    - shell: wget {{ debootstrap_pkg_url }} -O debootstrap-new.deb && dpkg -i debootstrap-new.deb && rm debootstrap-new.deb
+      args:
+          chdir: /tmp
+
+    # FIXME: An ugly and hopefully temporary hack.
+    - shell: ln -s /usr/share/debootstrap/scripts/green /usr/share/debootstrap/scripts/landing
+      args:
+        creates: /usr/share/debootstrap/scripts/landing
 
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
 
@@ -37,15 +43,15 @@
 
     - shell: btrfs subvolume create /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: btrfs
 
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
-        --components="main,contrib,non-free"
+        --components="main"
         --include=aptitude
         --keep-sbuild-chroot-dir
         --make-sbuild-tarball=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
@@ -53,30 +59,30 @@
         /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
         {{ mirror }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
       when: not btrfs
 
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
-        --components="main,contrib,non-free"
+        --components="main"
         --include=aptitude
         {{ item[0] }}
         /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
         {{ mirror }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/tmp
       when: btrfs
 
     - file: state=directory path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     # unpack any existing chroots
     - shell: >
@@ -85,118 +91,109 @@
         rm /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz;
         fi
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       when: not btrfs
 
     - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - file: src=pts/ptmx path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=link force=yes
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - lineinfile: line='Acquire::PDiffs "false";' dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/apt.conf.d/00pdiff create=yes
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
       when: item[2] != 'staging'
       with_nested:
         - [ 'deb', '#deb-src' ]
-        - architectures
-        - releases
-
-    - lineinfile: line="{{ item[0] }} http://buildd.tanglu.org/build-queues buildq-staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
-      with_nested:
-        - [ 'deb', '#deb-src' ]
-        - architectures
+        - "{{ architectures }}"
+        - "{{ suites }}"
 
     - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="^type=directory" replace="type=btrfs-snapshot"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       when: btrfs
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="^directory=.*$" replace="btrfs-source-subvolume=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       when: btrfs
 
     - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="btrfs-snapshot-directory=/srv/buildd/snapshots"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       when: btrfs
 
     - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
       when: item[0] != 'staging'
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
 
     # disable sources in the build chroots
     - replace: dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/sources.list regexp="^deb-src" replace="#deb-src"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
       when: item[0] != 'staging'
       with_nested:
-        - releases
-        - architectures
-
-    # workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=769289
-    - lineinfile: dest=/etc/schroot/chroot.d/staging-{{ item }} line="profile=sbuild"
-      with_items: architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - shell: tar caf /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz -C /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} . && rm -r /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: not btrfs
 
     - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="command-prefix=eatmydata"
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
       with_nested:
-        - releases
-        - architectures
+        - "{{ suites }}"
+        - "{{ architectures }}"
 
     - name: Get the available CPU count
       shell: nproc

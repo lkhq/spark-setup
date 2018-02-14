@@ -1,0 +1,94 @@
+---
+- hosts: all
+  vars:
+    dput_profile: pureos
+    lighthouse_server: "tcp://88.99.243.238:5570"
+    lkspark_git_url: "https://github.com/lkorigin/laniakea-spark.git"
+    firehose_git_url: "https://github.com/fedora-static-analysis/firehose.git"
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=git
+    - apt: name=dput-ng
+    - apt: name=python3-setuptools
+    - apt: name=python3-debian
+    - apt: name=python3-zmq
+    - apt: name=python3-schroot
+
+    # set up Firehose Git repository
+    - stat: path=/srv/buildd/firehose-git
+      register: firehose_git
+
+    - shell: git fetch && git reset --hard origin/master
+      args:
+        chdir: /srv/buildd/firehose-git
+      when: firehose_git.stat.exists == True
+
+    - shell: git clone {{ firehose_git_url }} firehose-git
+      args:
+        chdir: /srv/buildd/
+      when: firehose_git.stat.exists == False
+
+    - shell: python3 setup.py build && python3 setup.py install
+      args:
+        chdir: /srv/buildd/firehose-git
+
+    # set up Laniakea Spark Git repository
+    - stat: path=/srv/buildd/spark-git
+      register: spark_git
+
+    - shell: git fetch && git reset --hard origin/master
+      args:
+        chdir: /srv/buildd/spark-git
+      when: spark_git.stat.exists == True
+
+    - shell: git clone {{ lkspark_git_url }} spark-git
+      args:
+        chdir: /srv/buildd/
+      when: spark_git.stat.exists == False
+
+    - shell: python3 setup.py build && python3 setup.py install
+      args:
+        chdir: /srv/buildd/spark-git
+
+    - shell: cp -f /srv/buildd/spark-git/data/systemd/laniakea-spark.service.in /lib/systemd/system/laniakea-spark.service
+    - systemd:
+        daemon_reload: yes
+
+    - shell: hostname
+      register: hostname
+
+    - group: name=lkspark system=yes
+    - user: name=lkspark createhome=yes groups=lkspark,sbuild home=/var/lib/lkspark/ shell=/bin/sh system=yes
+    - file: path=/var/lib/lkspark/ state=directory owner=lkspark group=lkspark
+
+    - file: state=directory path=/etc/laniakea/keys/curve/secret/
+
+    - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=lkspark group=lkspark mode=0600
+
+    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}_private.sec src=keys/{{ hostname.stdout }}_private.sec group=lkspark owner=lkspark mode=0600
+
+    - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=lkspark owner=lkspark mode=0600
+
+    - shell: sudo -H -u lkspark gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}_secret.gpg && touch /var/lib/lkspark/.ansible-pgp-imported
+      args:
+        creates: /var/lib/lkspark/.ansible-pgp-imported
+
+    - name: get the builder PGP fingerprint
+      shell: sudo -H -u lkspark gpg --fingerprint {{ hostname.stdout }}@worker.pureos.net | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      register: gpg_fingerprint
+
+    - template: dest=/etc/laniakea/spark.json src=spark/spark.json.j2
+      with_items:
+        - { dput_profile: "{{ dput_profile }}", gpg_fingerprint: "{{ gpg_fingerprint.stdout }}", lighthouse_server: "{{ lighthouse_server }}"  }
+
+    - template: dest=/etc/dput.d/metas/{{ dput_profile }}.json src=dput/{{ dput_profile }}_meta.json
+
+    - template: dest=/etc/dput.d/profiles/{{ dput_profile }}.json src=dput/{{ dput_profile }}_profile.json
+
+    - name: Enable and start Laniakea Spark daemon
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        enabled: yes
+        name: laniakea-spark

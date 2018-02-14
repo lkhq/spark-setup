@@ -1,0 +1,7 @@
+{
+    "fqdn": "upload.pureos.net",
+    "incoming": "~/incoming/",
+    "login": "anonymous",
+    "meta": "pureos",
+    "method": "ftp"
+}
