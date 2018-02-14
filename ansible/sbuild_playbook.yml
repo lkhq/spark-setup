@@ -10,6 +10,7 @@
     architectures:
         - amd64
     btrfs: False # experimental
+    with_updates: False
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
@@ -116,7 +117,7 @@
         - "{{ architectures }}"
 
     - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
-      when: item[2] != 'staging'
+      when: item[2] != 'staging' and with_updates
       with_nested:
         - [ 'deb', '#deb-src' ]
         - "{{ architectures }}"
@@ -148,7 +149,7 @@
       when: btrfs
 
     - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
-      when: item[0] != 'staging'
+      when: item[0] != 'staging' and with_updates
       with_nested:
         - "{{ suites }}"
         - "{{ architectures }}"
@@ -167,7 +168,7 @@
         - "{{ architectures }}"
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
-      when: item[0] != 'staging'
+      when: item[0] != 'staging' and with_updates
       with_nested:
         - "{{ suites }}"
         - "{{ architectures }}"

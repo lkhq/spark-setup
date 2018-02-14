@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "tanglu-core"
+  config.vm.box = "debian/stretch64"
 
   # override the guest os autodetect
   config.vm.guest = "debian"
@@ -59,9 +59,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vb.customize ["modifyvm", :id, "--memory", "2560"]
     vb.customize ["modifyvm", :id, "--cpus", "4"]
   end
-  #
-  # View the documentation for the provider you're using for more
-  # information on available options.
+
+  config.vm.provision "shell", path: "vagrant/box-setup_init.sh"
 
   # Bootstrap the buildd
   config.vm.provision "ansible" do |ansible|
@@ -70,7 +69,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   # Finish the box setup
-  config.vm.provision "shell", path: "box-setup.sh"
+  config.vm.provision "shell", path: "vagrant/box-setup_finish.sh"
 
   # Enable provisioning with CFEngine. CFEngine Community packages are
   # automatically installed. For example, configure the host as a

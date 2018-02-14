@@ -1,5 +1,6 @@
 #!/bin/bash
 set -x
+set -e
 
 # restrict ssh login
 cat << EOF >> /etc/ssh/sshd_config
@@ -12,7 +13,7 @@ EOF
 systemctl restart ssh
 
 # Add more swap
-fallocate -l 8G /srv/swap
+fallocate -l 6G /srv/swap
 mkswap /srv/swap
 chmod 600 /srv/swap
 
