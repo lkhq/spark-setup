@@ -1,14 +1,20 @@
-# Tanglu Buildd Provisioning
+# Laniakea Spark Worker Provisioning
 
-## Set up a new builder
+## Set up a new worker
 
-### Set up a system to host the builder
+### Set up a system to host the worker
 Install a buildd host using one of our supported releases:
-   * Tanglu Bartholomea (2.0)
-   * Tanglu Chromodoris
-   * Debian Jessie
+   * Tanglu Elysia
+   * Debian Buster
+   * PureOS 8.0
 
 For more information see [README.host.md](README.host.md).
+
+### Update the Ansible Playbooks
+This configuration was made to work for Tanglu and PureOS - you will have to edit
+it and adjust the Ansible Playbook variables to your needs to make it work for
+your purpose.
+The instructions also use Tanglu or PureOS as example.adjust accordingly.
 
 ### Generate the Builder Keys
 - Note1: The rng-tools and urandom may help if you don't have enough entropy
@@ -18,13 +24,14 @@ For more information see [README.host.md](README.host.md).
          You might not want to generate the Builder PGP and SSL keys on a
          provisioned builder.
 
-Do the following steps on some machine that is not the `buildd` host.
+Do the following steps on some machine that is not the `worker` host.
 
-#### Pick a name ####
-Pick the name of an element as `buildd` machine name. Check out
+#### Pick a name
+For Tanglu: Pick the name of a chemical element as `buildd` machine name. Check out
 [the Debile web interface](http://buildd.tanglu.org/) for a list of existing names.
+For other distributions, just pick a unique name.
 
-#### Generate a GPG key ####
+#### Generate a GPG key
 Run
 ```
 gpg --gen-key
@@ -45,8 +52,8 @@ In the interactive prompt enter the following key information:
 Wait for the key generation to complete, once all questions are answered.
 
 Finally export the GPG secret and public key:
-- If you haven´t done so already, clone this GIT repository to a local directory
-  (`git clone https://github.com/tanglu-org/buildd-setup.git`) and open that directory in your shell
+- If you haven´t done so already, clone this Git repository to a local directory
+  (`git clone https://github.com/lkorigin/spark-setup.git`) and open that directory in your shell
 - Navigate to the `ansible/keys` subdirectory (so that the provisioning system can find the keys)
 - Run these commands to export the GPG secret key and public key and protect the secret key file:
 ```
@@ -55,25 +62,22 @@ gpg --armor --export "<element>@buildd.tanglu.org" > <element>.pgp && \
 chmod go-rwx *.sec
 ```
 
-#### Generate the Debile XMLRPC TLS key ###
+#### Generate the CurveZMQ encryption keys
 
-Make sure you're still in the `ansible/keys` subdirectory of your local copy of this GIT repository.
+Make sure you're still in the `ansible/keys` subdirectory of your local copy of this Git repository.
 
-Invoke the `openssl` command to generate a TLS key and certificate for your future Debile instance:
+Invoke the `lk-keytool` command of the Laniakea suite to generate a TLS key and certificate for your future Debile instance:
 ```
-openssl req -utf8 -nodes -newkey rsa:4096 -sha256 -x509 -days 7300 \
--subj "/C=NT/O=Tanglu Project/OU=Package Build Service/CN=<element>/emailAddress=<element>@buildd.tanglu.org" \
--keyout <element>.key -out <element>.crt && \
-chmod go-rwx *.key
+lk-keytool cert-new --name=<element> --email='<element>@buildd.tanglu.org' --organization='Tanglu Project' <element>
 ```
 Don´t forget to replace `<element>` with the name of your `buildd` machine name.
 
-### Provision the builder ###
+### Provision the builder
 
 We use `ansible` to setup the builder instances for Tanglu. Some background information on how
 `ansible` works can be found on [its web pages](http://www.ansible.com/how-ansible-works).
 
-#### Requirements and Preparation ####
+#### Requirements and Preparation
 
 In order to use `ansible` for provisioning, the following conditions must be met:
 
@@ -94,11 +98,11 @@ builder to the `ansible`´s inventory in `/etc/ansible/hosts`:
 ```
 Where `<builder address>` is the server name or IP address of your builder instance.
 
-#### Provision the builder ####
+#### Provision the builder
 
 Party time!
 
-Run the following command in the root directory of your local copy of this GIT repository:
+Run the following command in the root directory of your local copy of this Git repository:
 ```
 ansible-playbook -K -u <remote user> -l <builder address> ansible/playbook.yml
 ```
@@ -108,32 +112,13 @@ server name or IP address of your builder instance.
 `ansible` will ask you for the `sudo` password of the remote user. Once you have entered it, you can
 sit back and watch as the builder gets set up. :grinning:
 
-#### Post-setup tasks ####
+#### Post-setup tasks
 
 Once `ansible` finishes, the builder should be restarted so `systemd` can properly start the
-`debile`-slave service. After this the builder should be ready and ask the master for new jobs.
+`laniakea-spark`-slave service. After this the builder should be ready and ask the master for new jobs.
 
-## Migrate an existing builder
-
-Back up any settings that are not covered by the ansible provisioning
-
-Back up the builder keys:
- ```
- /srv/buildd/<element>.key
- /srv/buildd/<element>.crt
- /srv/buildd/<element>.pgp
- ```
-
-You will need to export the secret builder pgp key, for that log into the
-builder, then
- ```
- sudo -u buildd -i
- gpg --export-secret-key -a <element>@buildd.tanglu.org > /srv/buildd/<element>.sec
- ```
-then backup `/srv/buildd/<element>.sec`
-
-Put all keys in ansible/keys/
-The provisioning will import the keys into the buildd from there
+Register the builders GPG key with DAK on the master server, and add the builder's public key to
+Laniakea's trusted key pool on the master server.
 
 ## Vagrant
 
