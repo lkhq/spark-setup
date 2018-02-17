@@ -53,7 +53,7 @@
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
         --components="main"
-        --include=aptitude
+        --include=ca-certificates,aptitude
         --keep-sbuild-chroot-dir
         --make-sbuild-tarball=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
         {{ item[0] }}
@@ -69,7 +69,7 @@
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
         --components="main"
-        --include=aptitude
+        --include=ca-certificates,aptitude
         {{ item[0] }}
         /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
         {{ mirror }}
