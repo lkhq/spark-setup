@@ -75,7 +75,7 @@
         creates: /var/lib/lkspark/.ansible-pgp-imported
 
     - name: get the builder PGP fingerprint
-      shell: sudo -H -u lkspark gpg --fingerprint {{ hostname.stdout }}@worker.pureos.net | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      shell: sudo -H -u lkspark gpg --fingerprint --with-colons '*@workers.pureos.net' | grep "^fpr" | cut -d: -f10
       register: gpg_fingerprint
 
     - template: dest=/etc/laniakea/spark.json src=spark/spark.json.j2
