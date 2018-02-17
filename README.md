@@ -34,7 +34,7 @@ For other distributions, just pick a unique name.
 #### Generate a GPG key
 Run
 ```
-gpg --gen-key
+gpg --full-generate-key
 ```
 to start generating a new GPG key.
 
@@ -57,9 +57,9 @@ Finally export the GPG secret and public key:
 - Navigate to the `ansible/keys` subdirectory (so that the provisioning system can find the keys)
 - Run these commands to export the GPG secret key and public key and protect the secret key file:
 ```
-gpg --export-secret-key -a <element>@buildd.tanglu.org > <element>.sec && \
-gpg --armor --export "<element>@buildd.tanglu.org" > <element>.pgp && \
-chmod go-rwx *.sec
+gpg --export-secret-key -a <element>@buildd.tanglu.org > <element>_secret.gpg && \
+gpg --armor --export "<element>@buildd.tanglu.org" > <element>.gpg && \
+chmod go-rwx *secret.gpg
 ```
 
 #### Generate the CurveZMQ encryption keys
