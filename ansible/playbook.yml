@@ -10,6 +10,6 @@
 
     - apt: name=vim
 
-- import_playbook: sbuild_playbook.yml
+- import_playbook: debspawn_playbook.yml
 - import_playbook: spark_playbook.yml
 - import_playbook: user_playbook.yml

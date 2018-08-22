@@ -8,7 +8,7 @@
         - "{{ incoming }}"
     mirror: "http://repo.pureos.net/pureos/"
     architectures:
-        - amd64
+        - arm64
     btrfs: False # experimental
     with_updates: False
   sudo: yes

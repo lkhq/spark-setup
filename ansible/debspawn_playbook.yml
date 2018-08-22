@@ -1,0 +1,74 @@
+---
+- hosts: all
+  vars:
+    debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
+    debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos1_all.deb"
+    incoming: landing
+    suites:
+        - green
+        - "{{ incoming }}"
+    mirror: "https://repo.pureos.net/pureos/"
+    architectures:
+        - amd64
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=git
+    - apt: name=xsltproc
+    - apt: name=docbook-xsl
+    - apt: name=python3-setuptools
+    - apt: name=python3-pip
+    - apt: name=zstd
+    - apt: name=systemd-container
+    - apt: name=debootstrap
+
+    # set up Laniakea DebSpawn Git repository
+    - stat: path=/srv/buildd/debspawn-git
+      register: debspawn_git
+
+    - name: Update debspawn copy from git master
+      shell: git fetch && git reset --hard origin/master
+      args:
+        chdir: /srv/buildd/debspawn-git
+      when: debspawn_git.stat.exists == True
+
+    - name: Clone debspawn from git master
+      shell: git clone {{ debspawn_git_url }} debspawn-git
+      args:
+        chdir: /srv/buildd/
+      when: debspawn_git.stat.exists == False
+
+    - shell: python3 setup.py build && python3 setup.py install
+      args:
+        chdir: /srv/buildd/debspawn-git
+
+    # a really, really ugly hack to ensure we have PureOS' debootstrap
+    - shell: wget {{ debootstrap_pkg_url }} -O debootstrap-new.deb && dpkg -i debootstrap-new.deb && rm debootstrap-new.deb
+      args:
+          chdir: /tmp
+
+    - name: Create new debspawn images
+      shell: >
+        debspawn create --arch={{ item[1] }}
+        --components="main"
+        --mirror={{ mirror }}
+        {{ item[0] }}
+      with_nested:
+        - "{{ suites }}"
+        - "{{ architectures }}"
+      args:
+        creates: /var/lib/debspawn/containers/{{ item[0] }}-{{ item[1] }}.tar.zst
+
+    - name: Update debspawn images
+      shell: >
+        debspawn update --arch={{ item[1] }}
+        {{ item[0] }}
+      with_nested:
+        - "{{ suites }}"
+        - "{{ architectures }}"
+
+    - name: Allow lkspark to run debspawn
+      copy:
+          dest: /etc/sudoers.d/lkspark
+          content: |
+              lkspark ALL=(ALL) NOPASSWD: /usr/local/bin/debspawn
