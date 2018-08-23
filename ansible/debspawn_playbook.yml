@@ -8,8 +8,6 @@
         - green
         - "{{ incoming }}"
     mirror: "https://repo.pureos.net/pureos/"
-    architectures:
-        - amd64
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
@@ -21,6 +19,9 @@
     - apt: name=zstd
     - apt: name=systemd-container
     - apt: name=debootstrap
+
+    - shell: dpkg-architecture -qDEB_BUILD_ARCH
+      register: build_arch
 
     # set up Laniakea DebSpawn Git repository
     - stat: path=/srv/buildd/debspawn-git
@@ -49,23 +50,19 @@
 
     - name: Create new debspawn images
       shell: >
-        debspawn create --arch={{ item[1] }}
+        debspawn create --arch={{ build_arch.stdout }}
         --components="main"
         --mirror={{ mirror }}
-        {{ item[0] }}
-      with_nested:
-        - "{{ suites }}"
-        - "{{ architectures }}"
+        {{ item }}
+      with_items: "{{ suites }}"
       args:
-        creates: /var/lib/debspawn/containers/{{ item[0] }}-{{ item[1] }}.tar.zst
+        creates: /var/lib/debspawn/containers/{{ item }}-{{ build_arch.stdout }}.tar.zst
 
     - name: Update debspawn images
       shell: >
-        debspawn update --arch={{ item[1] }}
-        {{ item[0] }}
-      with_nested:
-        - "{{ suites }}"
-        - "{{ architectures }}"
+        debspawn update --arch={{ build_arch.stdout }}
+        {{ item }}
+      with_items: "{{ suites }}"
 
     - name: Allow lkspark to run debspawn
       copy:
