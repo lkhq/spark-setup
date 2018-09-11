@@ -6,6 +6,7 @@
     incoming: landing
     suites:
         - green
+        - purple
         - "{{ incoming }}"
     mirror: "https://repo.pureos.net/pureos/"
   sudo: yes
@@ -63,6 +64,11 @@
         debspawn update --arch={{ build_arch.stdout }}
         {{ item }}
       with_items: "{{ suites }}"
+
+    # allow full /dev access to debspawn containers - this is really ugly, but needed to run vmdb2 in
+    # a debspawn container, something which is made use of.
+    - file: state=directory path=/etc/debspawn/
+    - template: dest=/etc/debspawn/global.json src=debspawn/global.json.j2
 
     - name: Allow lkspark to run debspawn
       copy:
