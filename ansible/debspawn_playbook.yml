@@ -3,11 +3,11 @@
   vars:
     debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
     debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos1_all.deb"
-    incoming: landing
     suites:
-        - green
-        - purple
-        - "{{ incoming }}"
+        green: green
+        purple: purple
+        landing: landing
+        laboratory: landing # laboratory is using landing as base suite
     mirror: "https://repo.pureos.net/pureos/"
   sudo: yes
   tasks:
@@ -54,16 +54,17 @@
         debspawn create --arch={{ build_arch.stdout }}
         --components="main"
         --mirror={{ mirror }}
-        {{ item }}
-      with_items: "{{ suites }}"
+        --base-suite={{ item.value }}
+        {{ item.key }}
+      with_dict: "{{ suites }}"
       args:
-        creates: /var/lib/debspawn/containers/{{ item }}-{{ build_arch.stdout }}.tar.zst
+        creates: /var/lib/debspawn/containers/{{ item.key }}-{{ build_arch.stdout }}.tar.zst
 
     - name: Update debspawn images
       shell: >
         debspawn update --arch={{ build_arch.stdout }}
-        {{ item }}
-      with_items: "{{ suites }}"
+        {{ item.key }}
+      with_dict: "{{ suites }}"
 
     # allow full /dev access to debspawn containers - this is really ugly, but needed to run vmdb2 in
     # a debspawn container, something which is made use of.
