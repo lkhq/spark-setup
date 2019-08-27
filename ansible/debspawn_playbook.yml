@@ -2,9 +2,9 @@
 - hosts: all
   vars:
     debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
-    debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos1_all.deb"
+    debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos2_all.deb"
     suites:
-        green: green
+        amber: amber
         purple: purple
         landing: landing
         laboratory: landing # laboratory is using landing as base suite
