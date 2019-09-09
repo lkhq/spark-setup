@@ -4,10 +4,21 @@
     debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
     debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos2_all.deb"
     suites:
-        amber: amber
-        purple: purple
-        landing: landing
-        laboratory: landing # laboratory is using landing as base suite
+        landing:
+          base: landing
+          extra_suites: []
+        amber:
+          base: amber
+          extra_suites: []
+        amber-proposed-updates:
+          base: amber
+          extra_suites: ["amber-updates", "amber-security"]
+        amber-security:
+          base: amber
+          extra_suites: ["amber-updates", "amber-proposed-updates"]
+        amber-phone-staging:
+          base: amber
+          extra_suites: ["amber-updates", "amber-security", "amber-phone"]
     mirror: "https://repo.pureos.net/pureos/"
   sudo: yes
   tasks:
@@ -54,7 +65,8 @@
         debspawn create --arch={{ build_arch.stdout }}
         --components="main"
         --mirror={{ mirror }}
-        --base-suite={{ item.value }}
+        --base-suite={{ item.value.base }}
+        --extra-suites="{{ item.value.extra_suites | join(' ') }}"
         {{ item.key }}
       with_dict: "{{ suites }}"
       args:
