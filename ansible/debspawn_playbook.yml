@@ -2,10 +2,13 @@
 - hosts: all
   vars:
     debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
-    debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos2_all.deb"
+    debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.116pureos1_all.deb"
     suites:
         landing:
           base: landing
+          extra_suites: []
+        byzantium:
+          base: byzantium
           extra_suites: []
         amber:
           base: amber
