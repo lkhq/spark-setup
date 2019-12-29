@@ -3,16 +3,17 @@
   vars:
     debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
     debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.116pureos1_all.deb"
+    keyring_pkg_url: "https://repo.pureos.net/pureos/pool/main/p/pureos-archive-keyring/pureos-archive-keyring_2016.09_all.deb"
     suites:
         landing:
           base: landing
           extra_suites: []
         byzantium:
           base: byzantium
-          extra_suites: []
+          extra_suites: ["byzantium-updates", "byzantium-security"]
         amber:
           base: amber
-          extra_suites: []
+          extra_suites: ["amber-updates", "amber-security"]
         amber-proposed-updates:
           base: amber
           extra_suites: ["amber-updates", "amber-security"]
@@ -54,12 +55,23 @@
         chdir: /srv/buildd/
       when: debspawn_git.stat.exists == False
 
-    - shell: python3 setup.py build && python3 setup.py install
+    - name: Install Debspawn
+      shell: python3 setup.py build && python3 setup.py install
       args:
         chdir: /srv/buildd/debspawn-git
 
-    # a really, really ugly hack to ensure we have PureOS' debootstrap
-    - shell: wget {{ debootstrap_pkg_url }} -O debootstrap-new.deb && dpkg -i debootstrap-new.deb && rm debootstrap-new.deb
+    # a really, really ugly hack to ensure we have PureOS' debootstrap and keyring
+    - name: "HACK: Install Debootstrap from untrusted local package"
+      shell: wget {{ debootstrap_pkg_url }} -O debootstrap-new.deb && dpkg -i debootstrap-new.deb && rm debootstrap-new.deb
+      args:
+          chdir: /tmp
+    - name: "HACK: Link 'landing' suite script"
+      shell: ln -s amber landing
+      args:
+        chdir: /usr/share/debootstrap/scripts/
+        creates: /usr/share/debootstrap/scripts/landing
+    - name: "HACK: Install Keyring from untrusted local package"
+      shell: wget {{ keyring_pkg_url }} -O keyring.deb && dpkg -i keyring.deb && rm keyring.deb
       args:
           chdir: /tmp
 
