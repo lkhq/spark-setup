@@ -66,7 +66,7 @@
 
     - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=lkspark group=lkspark mode=0600
 
-    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}_private.sec src=keys/{{ hostname.stdout }}_private.sec group=lkspark owner=lkspark mode=0600
+    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}-spark_private.sec src=keys/{{ hostname.stdout }}-spark_private.sec group=lkspark owner=lkspark mode=0600
 
     - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=lkspark owner=lkspark mode=0600
 

@@ -66,10 +66,9 @@
       args:
           chdir: /tmp
     - name: "HACK: Link 'landing' suite script"
-      shell: ln -s amber landing
+      shell: ln -sf amber landing
       args:
         chdir: /usr/share/debootstrap/scripts/
-        creates: /usr/share/debootstrap/scripts/landing
     - name: "HACK: Install Keyring from untrusted local package"
       shell: wget {{ keyring_pkg_url }} -O keyring.deb && dpkg -i keyring.deb && rm keyring.deb
       args:
