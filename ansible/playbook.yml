@@ -1,7 +1,6 @@
 ---
 - name: Playbook for Laniakea Spark worker setup
   hosts: all
-  sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
 

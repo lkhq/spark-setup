@@ -5,7 +5,7 @@
     lighthouse_server: "tcp://88.99.243.238:5570"
     lkspark_git_url: "https://github.com/lkorigin/laniakea-spark.git"
     firehose_git_url: "https://github.com/fedora-static-analysis/firehose.git"
-  sudo: yes
+  become: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
     - apt: name=git

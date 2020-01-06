@@ -24,7 +24,7 @@
           base: amber
           extra_suites: ["amber-updates", "amber-security", "amber-phone"]
     mirror: "https://repo.pureos.net/pureos/"
-  sudo: yes
+  become: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
     - apt: name=git
