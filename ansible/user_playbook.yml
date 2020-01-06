@@ -1,6 +1,7 @@
 ---
 - name: playbook for user setup
   hosts: all
+  become: yes
   tasks:
     - name: use ctrl-a screen mode
       command: byobu-ctrl-a screen
