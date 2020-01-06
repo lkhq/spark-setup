@@ -56,7 +56,7 @@
       when: debspawn_git.stat.exists == False
 
     - name: Install Debspawn
-      shell: pip3 install --no-binary debspawn .
+      shell: python3 setup.py build && python3 setup.py install --single-version-externally-managed --root=/
       args:
         chdir: /srv/buildd/debspawn-git
 
