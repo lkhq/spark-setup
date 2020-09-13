@@ -1,12 +1,12 @@
 ---
 - name: Playbook for Laniakea Spark worker setup
   hosts: all
+  become_method: sudo
+  become: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
-
     - apt: name=byobu state=latest
       register: byobu_update
-
     - apt: name=vim
 
 - import_playbook: debspawn_playbook.yml

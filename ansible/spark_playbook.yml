@@ -15,6 +15,16 @@
     - apt: name=python3-zmq
     - apt: name=python3-schroot
 
+    - group: name=lkspark system=yes
+    - user: name=lkspark createhome=yes groups=lkspark,sbuild home=/var/lib/lkspark/ shell=/bin/sh system=yes
+
+    - name: Create buildd directory
+      file:
+        path: /srv/buildd
+        state: directory
+        owner: lkspark
+        group: lkspark
+
     # set up Firehose Git repository
     - stat: path=/srv/buildd/firehose-git
       register: firehose_git
@@ -58,8 +68,6 @@
     - shell: hostname
       register: hostname
 
-    - group: name=lkspark system=yes
-    - user: name=lkspark createhome=yes groups=lkspark,sbuild home=/var/lib/lkspark/ shell=/bin/sh system=yes
     - file: path=/var/lib/lkspark/ state=directory owner=lkspark group=lkspark
 
     - file: state=directory path=/etc/laniakea/keys/curve/secret/
