@@ -100,7 +100,7 @@
     # allow full /dev access to debspawn containers - this is really ugly, but needed to run vmdb2 in
     # a debspawn container, something which is made use of.
     - file: state=directory path=/etc/debspawn/
-    - template: dest=/etc/debspawn/global.json src=debspawn/global.json.j2
+    - template: dest=/etc/debspawn/global.toml src=debspawn/global.toml.j2
 
     - name: Allow lkspark to run debspawn
       copy:
