@@ -10,6 +10,7 @@
     - apt: update_cache=yes upgrade=dist
     - apt: name=git
     - apt: name=dput-ng
+    - apt: name=devscripts install_recommends=no
     - apt: name=python3-setuptools
     - apt: name=python3-debian
     - apt: name=python3-zmq
