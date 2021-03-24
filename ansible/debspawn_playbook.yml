@@ -32,6 +32,7 @@
     - apt: name=docbook-xsl
     - apt: name=python3-setuptools
     - apt: name=python3-pip
+    - apt: name=python3-toml
     - apt: name=zstd
     - apt: name=systemd-container
     - apt: name=debootstrap
@@ -89,7 +90,7 @@
         {{ item.key }}
       with_dict: "{{ suites }}"
       args:
-        creates: /var/lib/debspawn/containers/{{ item.key }}-{{ build_arch.stdout }}.tar.zst
+        creates: /var/lib/debspawn/images/{{ item.key }}-{{ build_arch.stdout }}.tar.zst
 
     - name: Update debspawn images
       shell: >
