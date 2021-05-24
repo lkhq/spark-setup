@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    debspawn_git_url: "https://github.com/lkorigin/debspawn.git"
+    debspawn_git_url: "https://github.com/lkhq/debspawn.git"
     debootstrap_pkg_url: "https://repo.pureos.net/pureos/pool/main/d/debootstrap/debootstrap_1.0.108pureos2_all.deb"
     keyring_pkg_url: "https://repo.pureos.net/pureos/pool/main/p/pureos-archive-keyring/pureos-archive-keyring_2016.09_all.deb"
     suites:
@@ -33,6 +33,7 @@
     - apt: name=python3-setuptools
     - apt: name=python3-pip
     - apt: name=python3-toml
+    - apt: name=python3-pkgconfig
     - apt: name=zstd
     - apt: name=systemd-container
     - apt: name=debootstrap
@@ -73,6 +74,10 @@
           chdir: /tmp
     - name: "HACK: Link 'landing' suite script"
       shell: ln -sf amber landing
+      args:
+        chdir: /usr/share/debootstrap/scripts/
+    - name: "HACK: Link 'byzantium' suite script"
+      shell: ln -sf amber byzantium
       args:
         chdir: /usr/share/debootstrap/scripts/
     - name: "HACK: Install Keyring from untrusted local package"
