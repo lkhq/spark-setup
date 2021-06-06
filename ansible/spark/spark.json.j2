@@ -1,9 +1,13 @@
 {
-    "LighthouseServer": "{{ item.lighthouse_server }}",
+    "LighthouseServer": "{{ lighthouse_server }}",
     "AcceptedJobs": [
-        "os-image-build",
-        "package-build"
+        {% for job_type in accepted_job_types %}"{{ job_type }}"{%+ if not loop.last %},
+
+        {%+ else %}
+
+        {% endif %}
+     {% endfor %}
     ],
-    "DputHost": "{{ item.dput_profile }}",
-    "GpgKeyID": "{{ item.gpg_fingerprint }}"
+    "DputHost": "{{ dput_profile }}",
+    "GpgKeyID": "{{ gpg_fingerprint }}"
 }
