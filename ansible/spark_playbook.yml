@@ -85,7 +85,7 @@
       shell: 'sudo -H -u lkspark gpg --fingerprint --with-colons ''*@{{ worker_email_domain }}'' | grep "^fpr" | cut -d: -f10'
       register: gpg_fingerprint_cmd
 
-    - template: dest=/etc/laniakea/spark.json src=spark/spark.json.j2
+    - template: dest=/etc/laniakea/spark.toml src=spark/spark.toml.j2
       vars:
         dput_profile: "{{ dput_profile }}"
         gpg_fingerprint: "{{ gpg_fingerprint_cmd.stdout }}"

@@ -1,0 +1,8 @@
+LighthouseServer = '{{ lighthouse_server }}'
+AcceptedJobs = [
+{% for job_type in accepted_job_types %}
+    '{{ job_type }}',
+{% endfor %}
+]
+DputHost = '{{ dput_profile }}'
+GpgKeyID = '{{ gpg_fingerprint }}'
