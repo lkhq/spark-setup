@@ -40,8 +40,13 @@
         chdir: /srv/buildd/
       when: debspawn_git.stat.exists == False
 
-    - name: Install Debspawn
+    - name: Install Debspawn 1/2
       shell: python3 setup.py install --root=/
+      args:
+        chdir: /srv/buildd/debspawn-git
+
+    - name: Install Debspawn 2/2
+      shell: python3 ./install-sysdata.py
       args:
         chdir: /srv/buildd/debspawn-git
 
