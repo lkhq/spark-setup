@@ -55,14 +55,6 @@
       shell: wget {{ debootstrap_pkg_url }} -O debootstrap-new.deb && dpkg -i debootstrap-new.deb && rm debootstrap-new.deb
       args:
           chdir: /tmp
-    - name: "HACK: Link 'landing' suite script"
-      shell: ln -sf amber landing
-      args:
-        chdir: /usr/share/debootstrap/scripts/
-    - name: "HACK: Link 'byzantium' suite script"
-      shell: ln -sf amber byzantium
-      args:
-        chdir: /usr/share/debootstrap/scripts/
     - name: "HACK: Install Keyring from untrusted local package"
       shell: wget {{ keyring_pkg_url }} -O keyring.deb && dpkg -i keyring.deb && rm keyring.deb
       args:
@@ -78,7 +70,7 @@
         {{ item.key }}
       with_dict: "{{ suites }}"
       args:
-        creates: /var/lib/debspawn/images/{{ item.key }}-{{ build_arch.stdout }}.tar.zst
+        creates: /var/lib/debspawn/images/{{ item.key }}-buildd-{{ build_arch.stdout }}.tar.zst
 
     - name: Update debspawn images
       shell: >
