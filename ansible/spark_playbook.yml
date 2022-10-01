@@ -12,7 +12,7 @@
     - apt: name=python3-setuptools
     - apt: name=python3-debian
     - apt: name=python3-zmq
-    - apt: name=python3-schroot
+    - apt: name=python3-tomlkit
 
     - group: name=lkspark system=yes
     - user: name=lkspark createhome=yes groups=lkspark home=/var/lib/lkspark/ shell=/bin/sh system=yes
