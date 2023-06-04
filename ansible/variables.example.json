@@ -1,12 +1,12 @@
 {
     "lighthouse_server": "tcp://<hostname>:5570",
-    "dput_profile": "mydistro",
     "host_accepted_jobs": {
         "anise": ["package-build"],
         "cumin": ["package-build"],
         "dill": ["package-build", "os-image-build"]
     },
     "worker_email_domain": "workers.mydistro.org",
+    "machine_owner": "",
 
     "debootstrap_pkg_url": "https://repo.mydistro.org/mydistro/pool/main/d/debootstrap/debootstrap_1.0.108mydistro2_all.deb",
     "keyring_pkg_url": "https://repo.mydistro.org/mydistro/pool/main/p/mydistro-archive-keyring/mydistro-archive-keyring_2016.09_all.deb",

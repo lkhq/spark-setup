@@ -87,7 +87,7 @@
 
     - template: dest=/etc/laniakea/spark.toml src=spark/spark.toml.j2
       vars:
-        dput_profile: "{{ dput_profile }}"
+        machine_owner: "{{ machine_owner }}"
         gpg_fingerprint: "{{ gpg_fingerprint_cmd.stdout }}"
         lighthouse_server: "{{ lighthouse_server }}"
         accepted_job_types: "{{ host_accepted_jobs[hostname.stdout] }}"
