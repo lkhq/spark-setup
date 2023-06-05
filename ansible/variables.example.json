@@ -7,6 +7,7 @@
     },
     "worker_email_domain": "workers.mydistro.org",
     "machine_owner": "",
+    "dput_profile": "mydistro",
 
     "debootstrap_pkg_url": "https://repo.mydistro.org/mydistro/pool/main/d/debootstrap/debootstrap_1.0.108mydistro2_all.deb",
     "keyring_pkg_url": "https://repo.mydistro.org/mydistro/pool/main/p/mydistro-archive-keyring/mydistro-archive-keyring_2016.09_all.deb",
