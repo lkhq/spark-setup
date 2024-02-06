@@ -14,15 +14,17 @@
     - apt: name=python3-zmq
     - apt: name=python3-tomlkit
 
-    - group: name=lkspark system=yes
-    - user: name=lkspark createhome=yes groups=lkspark home=/var/lib/lkspark/ shell=/bin/sh system=yes
+    - name: Ensure lkspark user
+      shell: adduser --force-badname --system --home /var/lib/lkspark/ --no-create-home --quiet _lkspark || true
+    - name: Ensure directory permissions
+      shell: chown _lkspark:nogroup /var/lib/lkspark || true
 
     - name: Create buildd directory
       file:
         path: /srv/buildd
         state: directory
-        owner: lkspark
-        group: lkspark
+        owner: _lkspark
+        group: nogroup
 
     # set up Firehose Git repository
     - stat: path=/srv/buildd/firehose-git
@@ -60,22 +62,26 @@
       args:
         chdir: /srv/buildd/spark-git
 
-    - shell: cp -f /srv/buildd/spark-git/data/systemd/laniakea-spark.service.in /lib/systemd/system/laniakea-spark.service
+    - name: Installing spark system files
+      shell: python3 install-sysdata.py --prefix=/usr/local/
+      args:
+        chdir: /srv/buildd/spark-git
+
     - systemd:
         daemon_reload: yes
 
     - shell: hostname
       register: hostname
 
-    - file: path=/var/lib/lkspark/ state=directory owner=lkspark group=lkspark
+    - file: path=/var/lib/lkspark/ state=directory owner=_lkspark group=nogroup
 
     - file: state=directory path=/etc/laniakea/keys/curve/secret/
 
-    - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=lkspark group=lkspark mode=0600
+    - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=_lkspark group=nogroup mode=0600
 
-    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}-spark_private.sec src=keys/{{ hostname.stdout }}-spark_private.sec group=lkspark owner=lkspark mode=0600
+    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}-spark_private.sec src=keys/{{ hostname.stdout }}-spark_private.sec group=nogroup owner=_lkspark mode=0600
 
-    - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=lkspark owner=lkspark mode=0600
+    - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=nogroup owner=_lkspark mode=0600
 
     - shell: sudo -H -u lkspark gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}_secret.gpg && touch /var/lib/lkspark/.ansible-pgp-imported
       args:
