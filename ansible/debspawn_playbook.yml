@@ -82,9 +82,3 @@
     # a debspawn container, something which is made use of.
     - file: state=directory path=/etc/debspawn/
     - template: dest=/etc/debspawn/global.toml src=debspawn/global.toml.j2
-
-    - name: Allow lkspark to run debspawn
-      copy:
-          dest: /etc/sudoers.d/lkspark
-          content: |
-              _lkspark ALL=(ALL) NOPASSWD: /usr/local/bin/debspawn

@@ -14,8 +14,10 @@
     - apt: name=python3-zmq
     - apt: name=python3-tomlkit
 
-    - name: Ensure lkspark user
-      shell: adduser --force-badname --system --home /var/lib/lkspark/ --no-create-home --quiet _lkspark || true
+    - name: Ensure _lkspark group
+      shell: addgroup --force-badname --system _lkspark || true
+    - name: Ensure _lkspark user
+      shell: adduser --force-badname --system --ingroup _lkspark --home /var/lib/lkspark/  --no-create-home --quiet _lkspark || true
     - name: Ensure directory permissions
       shell: chown _lkspark:nogroup /var/lib/lkspark || true
 
