@@ -75,22 +75,22 @@
     - shell: hostname
       register: hostname
 
-    - file: path=/var/lib/lkspark/ state=directory owner=_lkspark group=nogroup
+    - file: path=/var/lib/lkspark/ state=directory owner=_lkspark group=_lkspark
 
     - file: state=directory path=/etc/laniakea/keys/curve/secret/
 
-    - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=_lkspark group=nogroup mode=0600
+    - template: dest=/etc/laniakea/keys/curve/{{ hostname.stdout }}_lighthouse-server.pub src=keys/lighthouse-server.pub owner=_lkspark group=_lkspark mode=0600
 
-    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}-spark_private.sec src=keys/{{ hostname.stdout }}-spark_private.sec group=nogroup owner=_lkspark mode=0600
+    - template: dest=/etc/laniakea/keys/curve/secret/{{ hostname.stdout }}-spark_private.sec src=keys/{{ hostname.stdout }}-spark_private.sec group=_lkspark owner=_lkspark mode=0600
 
-    - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=nogroup owner=_lkspark mode=0600
+    - template: dest=/srv/buildd/{{ hostname.stdout }}_secret.gpg src=keys/{{ hostname.stdout }}_secret.gpg group=_lkspark owner=_lkspark mode=0600
 
-    - shell: sudo -H -u lkspark gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}_secret.gpg && touch /var/lib/lkspark/.ansible-pgp-imported
+    - shell: sudo -H -u _lkspark gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}_secret.gpg && touch /var/lib/lkspark/.ansible-pgp-imported
       args:
         creates: /var/lib/lkspark/.ansible-pgp-imported
 
     - name: Get the builder PGP fingerprint
-      shell: 'sudo -H -u lkspark gpg --fingerprint --with-colons ''*@{{ worker_email_domain }}'' | grep "^fpr" | cut -d: -f10'
+      shell: 'sudo -H -u _lkspark gpg --fingerprint --with-colons ''*@{{ worker_email_domain }}'' | grep "^fpr" | cut -d: -f10'
       register: gpg_fingerprint_cmd
 
     - template: dest=/etc/laniakea/spark.toml src=spark/spark.toml.j2
